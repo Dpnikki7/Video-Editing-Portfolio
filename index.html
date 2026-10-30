@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nikhileswar – Short-form video editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF1F8; --surface:#FFFFFF; --ink:#141A33; --muted:#53597A; --line:#D5DAEA;
+  --accent:#E8452C; --accent-ink:#FFFFFF; --playhead:#F2A516;
+  --clip1:#3B4CCA; --clip2:#1E8F8A; --clip3:#8A3FB8;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1530; --surface:#182046; --ink:#F1F3FC; --muted:#A3AAD0; --line:#2B3568;
+    --accent:#FF6B4F; --accent-ink:#140A08; --clip1:#6B7CFF; --clip2:#3FD0C9; --clip3:#C57BFF;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1530; --surface:#182046; --ink:#F1F3FC; --muted:#A3AAD0; --line:#2B3568;
+  --accent:#FF6B4F; --accent-ink:#140A08; --clip1:#6B7CFF; --clip2:#3FD0C9; --clip3:#C57BFF;
+  color-scheme:dark;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1.0625rem/1.65 var(--body);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);line-height:1.05;margin:0;letter-spacing:-.02em}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--playhead);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 1.5rem}
+section{padding:5rem 0}
+h2{font-size:clamp(1.9rem,4vw,2.6rem);font-weight:800;margin-bottom:.6rem}
+.lede{color:var(--muted);max-width:56ch;margin:0 0 2.5rem}
+
+/* nav */
+nav{display:flex;justify-content:space-between;align-items:center;padding:1.25rem 0}
+nav .name{font:800 1.15rem var(--display);text-decoration:none}
+nav ul{display:flex;gap:1.5rem;list-style:none;margin:0;padding:0}
+nav ul a{text-decoration:none;color:var(--muted);font-weight:500}
+nav ul a:hover{color:var(--ink)}
+@media(max-width:560px){nav ul li:not(:last-child){display:none}}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1fr;gap:3rem;align-items:center;padding:3rem 0 4rem}
+.hero h1{font-size:clamp(2.8rem,7vw,5.2rem);font-weight:800}
+.hero p{font-size:1.2rem;color:var(--muted);max-width:44ch;margin:1.5rem 0 2rem}
+.btns{display:flex;gap:.9rem;flex-wrap:wrap}
+.btn{display:inline-block;padding:.85rem 1.5rem;border-radius:999px;font-weight:500;text-decoration:none;border:2px solid var(--ink)}
+.btn.main{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.btn:hover{transform:translateY(-2px)}
+.phone{justify-self:center;width:min(250px,70vw);aspect-ratio:9/16;border-radius:34px;background:#0B0F24;border:7px solid #232B57;position:relative;overflow:hidden;box-shadow:0 24px 50px rgba(15,21,48,.35)}
+.phone .screen{position:absolute;inset:0;background:linear-gradient(160deg,#3B4CCA,#8A3FB8 55%,#E8452C);display:grid;place-items:center;text-align:center;color:#fff;padding:1.5rem}
+.phone .play{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.2);border:2px solid #fff;display:grid;place-items:center;margin:0 auto 1rem}
+.phone .play::after{content:"";border-left:20px solid #fff;border-top:12px solid transparent;border-bottom:12px solid transparent;margin-left:5px}
+.phone small{font-size:.9rem;opacity:.9}
+@media(max-width:800px){.hero{grid-template-columns:1fr}.phone{order:-1}}
+
+/* timeline strip: the one motion moment */
+.timeline{position:relative;height:56px;border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden;margin-top:1rem}
+.timeline i{position:absolute;top:8px;height:18px;border-radius:5px}
+.timeline i:nth-child(1){left:2%;width:24%;background:var(--clip1)}
+.timeline i:nth-child(2){left:28%;width:15%;background:var(--clip2)}
+.timeline i:nth-child(3){left:45%;width:30%;background:var(--clip3)}
+.timeline i:nth-child(4){left:77%;width:21%;background:var(--clip1)}
+.timeline i.b{top:32px;height:14px;opacity:.55}
+.timeline i:nth-child(5){left:10%;width:40%;background:var(--clip2)}
+.timeline i:nth-child(6){left:54%;width:36%;background:var(--clip3)}
+.playhead{position:absolute;top:0;bottom:0;left:0;width:2px;background:var(--playhead);animation:scrub 3.2s cubic-bezier(.6,.05,.3,1) .4s forwards}
+.playhead::before{content:"";position:absolute;top:0;left:-5px;border:6px solid transparent;border-top-color:var(--playhead)}
+@keyframes scrub{to{left:100%}}
+@media(prefers-reduced-motion:reduce){.playhead{animation:none;left:35%}html{scroll-behavior:auto}.btn:hover{transform:none}}
+
+/* work */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1.75rem}
+.card{display:block;text-decoration:none}
+.thumb{width:100%;cursor:pointer;font:inherit;text-align:left;aspect-ratio:16/9;border-radius:20px;position:relative;overflow:hidden;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:1.1rem;border:1px solid var(--line)}
+.thumb .tag{position:absolute;top:.9rem;left:.9rem;background:rgba(10,14,35,.6);padding:.2rem .65rem;border-radius:999px;font-size:.8rem}
+.thumb .len{position:absolute;top:.9rem;right:.9rem;font-size:.8rem;background:rgba(10,14,35,.6);padding:.2rem .6rem;border-radius:999px}
+.thumb h3{font-size:1.25rem;text-shadow:0 2px 12px rgba(0,0,0,.4)}
+.card p{margin:.7rem 0 0;color:var(--muted);font-size:.97rem;line-height:1.5}
+.card .soon{display:inline-block;margin-top:.4rem;font-size:.88rem;font-weight:500;color:var(--accent)}
+.grid{align-items:start}
+.card.v .thumb{aspect-ratio:9/16;max-width:230px}
+.thumb .pl{position:absolute;top:50%;left:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:rgba(255,255,255,.22);border:2px solid #fff}
+.thumb .pl::after{content:"";position:absolute;top:50%;left:50%;margin:-11px 0 0 -7px;border-left:18px solid #fff;border-top:11px solid transparent;border-bottom:11px solid transparent}
+.thumb.playing{cursor:default}
+.thumb iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.g1{background:linear-gradient(165deg,#3B4CCA,#141A33)}
+.g2{background:linear-gradient(165deg,#E8452C,#8A3FB8)}
+.g3{background:linear-gradient(165deg,#1E8F8A,#141A33)}
+.g4{background:linear-gradient(165deg,#F2A516,#E8452C)}
+.g5{background:linear-gradient(165deg,#8A3FB8,#3B4CCA)}
+.g6{background:linear-gradient(165deg,#2A3A8F,#1E8F8A)}
+
+.note{margin-top:2rem;padding:1rem 1.25rem;border-left:4px solid var(--playhead);background:var(--surface);border-radius:0 12px 12px 0;color:var(--muted);font-size:.97rem}
+
+/* services */
+.services{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem}
+.svc{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:1.6rem}
+.svc h3{font-size:1.25rem;margin-bottom:.5rem}
+.svc p{margin:0;color:var(--muted);font-size:.98rem}
+.steps{margin:3rem 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;counter-reset:s}
+.steps li{counter-increment:s;border-top:3px solid var(--ink);padding-top:.9rem}
+.steps li::before{content:counter(s);font:800 1.4rem var(--display);color:var(--accent);display:block}
+.steps b{font-family:var(--display);font-size:1.1rem}
+.steps span{display:block;color:var(--muted);font-size:.95rem}
+
+/* working style */
+.style-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;margin-top:2rem}
+.style-list div{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--playhead);border-radius:14px;padding:1.4rem}
+.style-list h3{font-size:1.15rem;margin-bottom:.4rem}
+.style-list p{margin:0;color:var(--muted);font-size:.97rem}
+/* about + contact */
+.about{display:grid;grid-template-columns:1fr 1fr;gap:3rem}
+@media(max-width:800px){.about{grid-template-columns:1fr}}
+.tools{display:flex;flex-wrap:wrap;gap:.6rem;padding:0;list-style:none;margin:1rem 0 0}
+.tools li{border:1px solid var(--line);background:var(--surface);padding:.4rem .9rem;border-radius:999px;font-size:.95rem}
+.contact{background:var(--ink);color:var(--bg);border-radius:28px;padding:3.5rem 2rem;text-align:center}
+.contact h2{margin-bottom:1rem}
+.contact p{max-width:46ch;margin:0 auto 2rem;opacity:.85}
+.contact .btn{border-color:var(--bg);color:var(--bg)}
+.contact .btn.main{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+footer{padding:2rem 0 3rem;color:var(--muted);font-size:.92rem;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav aria-label="Main">
+    <a class="name" href="#top">Nikhileswar</a>
+    <ul>
+      <li><a href="#work">Work</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <header class="hero" id="top">
+    <div>
+      <h1>Short videos that hold attention past the first second.</h1>
+      <p>I’m Nikhileswar, a video editor who cuts Reels, Shorts and event videos in DaVinci Resolve, with tight pacing, clean captions and sound that lands.</p>
+      <div class="btns">
+        <a class="btn main" href="#work">See my work</a>
+        <a class="btn" href="#contact">Hire me for a project</a>
+      </div>
+      <div class="timeline" aria-hidden="true">
+        <i></i><i></i><i></i><i></i><i class="b"></i><i class="b"></i>
+        <span class="playhead"></span>
+      </div>
+    </div>
+  </header>
+
+  <section id="work">
+    <h2>Selected work</h2>
+    <p class="lede">Six college event edits and one personal project. Press play on any card to watch it right here.</p>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section id="services">
+    <h2>What I can edit for you</h2>
+    <p class="lede">Everything is made vertical (9:16) and exported ready to post.</p>
+    <div class="services">
+      <div class="svc"><h3>Event highlight reels</h3><p>Fast recaps of fests, performances, sports and guest talks, built around the best 20 to 45 seconds.</p></div>
+      <div class="svc"><h3>Reels, Shorts and TikToks</h3><p>Hook-first edits with jump cuts, zooms, beat-synced transitions and punchy pacing.</p></div>
+      <div class="svc"><h3>Captions and sound</h3><p>Readable animated subtitles, music mixing, voice clean-up and sound effects.</p></div>
+      <div class="svc"><h3>Colour grading</h3><p>Consistent, natural-looking colour using DaVinci Resolve’s colour page.</p></div>
+    </div>
+    <ol class="steps">
+      <li><b>Brief</b><span>You share footage and the goal for the video.</span></li>
+      <li><b>Rough cut</b><span>I send a first version, usually within 1 to 2 days.</span></li>
+      <li><b>Revisions</b><span>We tweak pacing, text and music together.</span></li>
+      <li><b>Delivery</b><span>Final 1080×1920 file, ready to upload.</span></li>
+    </ol>
+  </section>
+
+  <section id="about">
+    <div class="about">
+      <div>
+        <h2>About me</h2>
+        <p>I started editing by covering my college’s events, and I’ve cut a large number of videos for them: cultural nights, sports days, tech fests and more. Working with real deadlines and event footage taught me how to find the story in hours of raw clips and turn it into something people actually finish watching.</p>
+        <p>I’m now taking on my first client projects and I put full effort into every one.</p>
+      </div>
+      <div>
+        <h2>Tools</h2>
+        <ul class="tools">
+          <li>DaVinci Resolve</li><li>Colour grading</li><li>Audio mixing</li><li>Motion text</li><li>Captions</li><li>9:16 delivery</li>
+        </ul>
+        <p style="margin-top:1.5rem">Based in Kerala, India. Available for remote work.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="style" style="padding-top:0">
+    <h2>How I work</h2>
+    <div class="style-list">
+      <div><h3>Always learning</h3><p>I’ve been learning something new with every edit, and I bring that growth to each project.</p></div>
+      <div><h3>An organised workflow</h3><p>Footage, music and project files are sorted and named properly, so nothing gets messy and revisions are quick.</p></div>
+      <div><h3>Any aspect ratio</h3><p>My college events needed 16:9, but I can edit just as well in 9:16, 1:1 or 4:5.</p></div>
+      <div><h3>My availability</h3><p>I’m a college student, so I may not be available in the mornings. Evenings and weekends work best.</p></div>
+    </div>
+  </section>
+
+  <section id="contact" style="padding-top:2rem">
+    <div class="contact">
+      <h2>Have footage that needs a great edit?</h2>
+      <p>Send me a short note about your video and where you plan to post it. I’ll reply with a quote and timeline.</p>
+      <div class="btns" style="justify-content:center">
+        <a class="btn main" href="mailto:nikhileswarpakala@outlook.com">nikhileswarpakala@outlook.com</a>
+      </div>
+    </div>
+  </section>
+  <footer>© Nikhileswar. Edited in DaVinci Resolve.</footer>
+</div>
+
+<script>
+// Edit this list. Add your real video links in "video" (YouTube Shorts / Instagram / Drive).
+const PROJECTS = [
+  {title:"Bathukamma invitation", tag:"Festival", g:"g2", desc:"An invitation video for the college’s Bathukamma celebration."},
+  {title:"Rocketry Workshop", tag:"Workshop", g:"g1", desc:"An edit for the rocketry workshop, built to show the energy of the event."},
+  {title:"Freshers’ trailer", tag:"Trailer", g:"g5", desc:"A trailer-style edit to welcome the new batch, with fast cuts and strong sound."},
+  {title:"150 days for Conscientia", tag:"Countdown", g:"g3", desc:"A countdown-style announcement edit building up to Conscientia."},
+  {title:"Hackorbital", tag:"Hackathon", g:"g6", desc:"An event edit for the Hackorbital hackathon."},
+  {title:"Ugadhi", tag:"Festival", g:"g4", desc:"A festive edit for the college’s Ugadhi celebration."},
+  {title:"T7", tag:"Personal project", g:"g1", desc:"A passion project I’m making purely out of interest, with no client brief."}
+];
+const IDS=["GTaJYG9DI34","js4V7aWKNXk","sq9q-zFle6g","oImQ6D2vetI","q2zTioexc0E","iPF2tVqbClE","bvUoETgYPOk"];
+PROJECTS.forEach((p,i)=>{p.id=IDS[i];p.v=(i===0);p.url=p.v?"https://youtube.com/shorts/"+p.id:"https://youtu.be/"+p.id});
+const grid=document.getElementById("grid");
+grid.innerHTML=PROJECTS.map(p=>{
+  return `<article class="card ${p.v?"v":""}">
+    <button class="thumb ${p.g}" data-id="${p.id}" aria-label="Play ${p.title}"><span class="tag">${p.tag}</span><span class="pl"></span><h3>${p.title}</h3></button>
+    <p>${p.desc}</p>
+    <a class="soon" href="${p.url}" target="_blank" rel="noopener">Watch on YouTube</a>
+  </article>`}).join("");
+grid.addEventListener("click",e=>{
+  const b=e.target.closest("button.thumb");
+  if(!b)return;
+  const d=document.createElement("div");
+  d.className=b.className+" playing";
+  d.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+b.dataset.id+'?autoplay=1&rel=0&playsinline=1" title="Video player" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';
+  b.replaceWith(d);
+});
+</script>
+</body>
+</html>
